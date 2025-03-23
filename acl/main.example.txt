@@ -1,0 +1,90 @@
+$ python3 acl/main.py
+
+Available commands:
+
+help  ->  Display this help message.
+exit  ->  Exit the program. All entered data will be lost.
+
+add user USER_NAME
+add resource RESOURCE_NAME
+set permission RESOURCE_NAME USER_NAME PERMISSION
+check permission RESOURCE_NAME USER_NAME PERMISSION
+get acl RESOURCE_NAME
+
+? add user alice
+? add user alice
+User 'alice' already exists. Try again.
+? add resource file
+? add resource file
+Resource 'file' already exists. Try again.
+? set permission file alice read
+? set permission file bob read
+User 'bob' doesn't exist. Try again.
+? set permission file bob delete
+User 'bob' doesn't exist. Try again.
+? set permission file alice delete
+Permission 'delete' is invalid for resource 'file'. Try again.
+? check permission file alice read
+True
+Access granted.
+? check permission file alice own
+False
+Permission denied.
+? get acl file
+ACL of 'file':
+alice: read
+? set permission alice own
+Invalid parameters.
+Usage:
+set permission RESOURCE_NAME USER_NAME PERMISSION
+? help
+
+Available commands:
+
+help  ->  Display this help message.
+exit  ->  Exit the program. All entered data will be lost.
+
+add user USER_NAME
+add resource RESOURCE_NAME
+set permission RESOURCE_NAME USER_NAME PERMISSION
+check permission RESOURCE_NAME USER_NAME PERMISSION
+get acl RESOURCE_NAME
+
+? set permission file alice own
+? set permission file alice write
+? add user bob
+? set permission file bob read
+? set permission file bob append
+? get acl file
+ACL of 'file':
+alice: read, write, own
+bob: read, append
+? set permission db bob own
+Resource 'db' doesn't exist. Try again.
+? add resource db
+? set permission db bob own
+? ser permission db bob execute
+Invalid command. Try again.
+? set permission db bob execute
+? set permission db bob read
+? set permission db bob write
+? get acl file
+ACL of 'file':
+alice: read, write, own
+bob: read, append
+? get acl db
+ACL of 'db':
+bob: read, write, execute, own
+? set permission bob read
+Invalid parameters.
+Usage:
+set permission RESOURCE_NAME USER_NAME PERMISSION
+
+NOTE: You can assign the same permission multiple times and it's not considered an error.
+
+? set permission db bob read
+? set permission db bob read
+? get acl db
+ACL of 'db':
+bob: read, write, execute, own
+? exit

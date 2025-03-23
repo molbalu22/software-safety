@@ -42,6 +42,7 @@ class Resource:
         self.name = name
         self.acl = {}
 
+    # 'Unchecked' means the user is assumed to exist, ensure that before calling
     def set_permission_unchecked(self, user, permission):
         if permission not in Resource.PERMISSIONS:
             raise NoSuchPermissionError()
@@ -58,6 +59,17 @@ class Resource:
             key=Resource.PERMISSIONS.index
         )
 
+    # 'Unchecked' means the user is assumed to exist, ensure that before calling
+    def check_permission_unchecked(self, user, permission):
+        if permission not in Resource.PERMISSIONS:
+            raise NoSuchPermissionError()
+
+        acl_entry = self.acl.get(user.name)
+
+        return (
+            acl_entry is not None
+            and permission in acl_entry
+        )
 
     def get_acl_str(self):
         if len(self.acl.keys()) == 0:
@@ -128,6 +140,20 @@ class SetPermissionCommand(Command):
             print(f"Permission '{permission}' is invalid for resource '{resource_name}'. Try again.")
 
 
+class CheckPermissionCommand(Command):
+    def execute(self, state, resource_name: str, user_name: str, permission: str):
+        try:
+            is_allowed = state.check_permission(resource_name, user_name, permission)
+            print(is_allowed)
+            print("Access granted." if is_allowed else "Permission denied.")
+        except NoSuchResourceError:
+            print(f"Resource '{resource_name}' doesn't exist. Try again.")
+        except NoSuchUserError:
+            print(f"User '{user_name}' doesn't exist. Try again.")
+        except NoSuchPermissionError:
+            print(f"Permission '{permission}' is invalid for resource '{resource_name}'. Try again.")
+
+
 class GetAclCommand(Command):
     def execute(self, state, resource_name: str):
         try:
@@ -146,8 +172,8 @@ class AppState:
 
         self.DEBUG = DEBUG
 
-        self.users = {}
-        self.resources = {}
+        self.users: dict[str, User] = {}
+        self.resources: dict[str, Resource] = {}
 
     def add_user(self, user):
         if user.name in self.users:
@@ -172,6 +198,19 @@ class AppState:
         user = self.users[user_name]
 
         resource.set_permission_unchecked(user, permission)
+
+
+    def check_permission(self, resource_name, user_name, permission):
+        if not resource_name in self.resources:
+            raise NoSuchResourceError()
+
+        if not user_name in self.users:
+            raise NoSuchUserError()
+
+        resource = self.resources[resource_name]
+        user = self.users[user_name]
+
+        return resource.check_permission_unchecked(user, permission)
 
 
     def get_acl(self, resource_name):
@@ -251,6 +290,7 @@ def main():
             AddUserCommand(["add", "user"]),
             AddResourceCommand(["add", "resource"]),
             SetPermissionCommand(["set", "permission"]),
+            CheckPermissionCommand(["check", "permission"]),
             GetAclCommand(["get", "acl"]),
         ],
         # DEBUG=True,
